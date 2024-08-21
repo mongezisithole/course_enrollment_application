@@ -1,0 +1,220 @@
+﻿@page "/"
+@using System.Security.Claims
+@attribute [Authorize]
+
+@inject HttpClient Http
+@inject AuthenticationStateProvider AuthStateProvider
+
+<PageTitle>Courses</PageTitle>
+
+<ConfirmDialog @ref="dialog" />
+
+<div class="card text-center">
+    <div class="card-header">
+        <ul class="nav nav-tabs card-header-tabs">
+            <li class="nav-item">
+                <a class=@("nav-link " + (SelectedButton == Buttons.MyCourses ? "active" : "") ) aria-current=@(SelectedButton == Buttons.MyCourses) @onclick=LoadMyCourses>My Courses</a>
+            </li>
+            <li class="nav-item">
+                <a class=@("nav-link " + (SelectedButton == Buttons.AvailableCourses ? "active" : "") ) aria-current=@(SelectedButton == Buttons.AvailableCourses) @onclick=LoadAvailableCourses>Available Courses</a>
+            </li>
+            <li class="nav-item">
+                <a class=@("nav-link " + (SelectedButton == Buttons.AllCourses ? "active" : "") ) aria-current=@(SelectedButton == Buttons.AllCourses) @onclick=LoadAllCourses>All Courses</a>
+            </li>
+        </ul>
+    </div>
+    <div class="card-body">
+        <h5 class="card-title">@Title</h5>
+
+        <table class="table">
+            <thead>
+                <tr>
+                    <th scope="col">#</th>
+                    <th scope="col">Course Name</th>
+
+
+                    @if (SelectedButton == Buttons.MyCourses)
+                    {
+                        <th scope="col">Academic Year</th>
+                        <th scope="col">Registration Date</th>
+                    }
+
+                    @if (SelectedButton != Buttons.MyCourses)
+                    {
+                        <th scope="col">Description</th>
+                    }
+
+                    <th scope="col">Actions</th>
+                </tr>
+            </thead>
+            <tbody>
+                @if (MyCourseSummaries != null && SelectedButton == Buttons.MyCourses)
+                {
+                    foreach (var course in MyCourseSummaries)
+                    {
+                        <tr>
+                            <th scope="row">@course.Id</th>
+                            <td>@course.CourseName</td>
+                            <td>@course.AcademicYear</td>
+                            <td>@course.RegistrationDate.ToString("dd-MMM-yyyy")</td>
+                            <td>
+                                <a class="btn btn-primary">View</a>
+                                <a class="btn btn-danger" @onclick=@(async () => await ShowConfirmationAsync(course.Id))>Deregister</a>
+                            </td>
+                        </tr>
+                    }
+                }
+
+                @if (AvailableCourseSummaries != null && SelectedButton == Buttons.AvailableCourses)
+                {
+                    foreach (var course in AvailableCourseSummaries)
+                    {
+                        <tr>
+                            <th scope="row">@course.Id</th>
+                            <td>@course.Name</td>
+                            <td>@course.Description</td>
+
+                            <td>
+                                <a class="btn btn-primary">View</a>
+                                <a class="btn btn-success">Register</a>
+                            </td>
+                        </tr>
+                    }
+                }
+
+                @if (AllCourseSummaries != null && SelectedButton == Buttons.AllCourses)
+                {
+                    foreach (var course in AllCourseSummaries)
+                    {
+                        <tr>
+                            <th scope="row">@course.Id</th>
+                            <td>@course.Name</td>
+                            <td>@course.Description</td>
+
+                            <td>
+                                <a class="btn btn-primary">View</a>
+                            </td>
+                        </tr>
+                    }
+                }
+
+            </tbody>
+        </table>
+    </div>
+</div>
+
+@code {
+    private ConfirmDialog dialog;
+
+    private string Title { get; set; } = "My courses";
+
+    private string? StudentNumber { get; set; }
+
+    private Buttons SelectedButton { get; set; } = Buttons.MyCourses;
+
+    private StudentCourseSummary[]? MyCourseSummaries { get; set; }
+
+    private CourseSummary[]? AllCourseSummaries { get; set; }
+
+    private CourseSummary[]? AvailableCourseSummaries { get; set; }
+
+    protected override async Task OnInitializedAsync()
+    {
+        await UpdateStudentNumber();
+
+        MyCourseSummaries = await Http.GetFromJsonAsync<StudentCourseSummary[]>($"api/StudentCourse?studentNumber={StudentNumber}");
+    }
+
+    private async Task LoadMyCourses()
+    {
+        Title = "My courses";
+        await UpdateStudentNumber();
+
+        SelectedButton = Buttons.MyCourses;
+        MyCourseSummaries = await Http.GetFromJsonAsync<StudentCourseSummary[]>($"api/StudentCourse?studentNumber={StudentNumber}");
+
+        AvailableCourseSummaries = null;
+        AllCourseSummaries = null;
+
+    }
+
+    private async Task LoadAllCourses()
+    {
+        Title = "All courses";
+        SelectedButton = Buttons.AllCourses;
+
+        AllCourseSummaries = await Http.GetFromJsonAsync<CourseSummary[]>("api/Courses");
+
+        MyCourseSummaries = null;
+        AvailableCourseSummaries = null;
+    }
+
+    private async Task LoadAvailableCourses()
+    {
+        Title = "Available courses";
+        await UpdateStudentNumber();
+
+        SelectedButton = Buttons.AvailableCourses;
+        AvailableCourseSummaries = await Http.GetFromJsonAsync<CourseSummary[]>($"api/StudentCourse/available?studentNumber={StudentNumber}");
+
+        MyCourseSummaries = null;
+        AllCourseSummaries = null;
+    }
+
+    private async Task UpdateStudentNumber()
+    {
+        if (string.IsNullOrEmpty(StudentNumber))
+        {
+            var state = await AuthStateProvider.GetAuthenticationStateAsync();
+            var claim = state.User.Claims.FirstOrDefault(o => o.Type == ClaimTypes.NameIdentifier);
+
+            if (claim != null)
+            {
+                StudentNumber = claim.Value;
+            }
+
+        }
+    }
+
+    public enum Buttons
+    {
+        MyCourses,
+        AvailableCourses,
+        AllCourses
+    }
+
+
+
+    private async Task ShowConfirmationAsync(int courseId)
+    {
+        var confirmation = await dialog.ShowAsync(
+            title: "Are you sure?",
+            message1: "This will deregister the course. Once deregistered can not be rolled back.",
+            message2: "Do you want to proceed?");
+
+        if (confirmation)
+        {
+            var state = await AuthStateProvider.GetAuthenticationStateAsync();
+            var claim = state.User.Claims.FirstOrDefault(o => o.Type == ClaimTypes.Sid);
+
+            if (claim != null)
+            {
+                var studentId = claim.Value;
+                var details = new StudentCourseDeregistrationDetails
+                    {
+                        CourseId = courseId,
+                        StudentId = Convert.ToInt32(studentId)
+                    };
+
+                await Http.PostAsJsonAsync($"api/StudentCourse/deregister", details);
+                await LoadMyCourses();
+            }
+        }
+        else
+        {
+
+        }
+    }
+}
+
+

@@ -1,0 +1,19 @@
+﻿<Project Sdk="Microsoft.NET.Sdk.Web">
+
+  <PropertyGroup>
+    <TargetFramework>net7.0</TargetFramework>
+    <Nullable>enable</Nullable>
+    <ImplicitUsings>enable</ImplicitUsings>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <PackageReference Include="Microsoft.AspNetCore.Components.WebAssembly.Server" Version="7.0.20" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\..\course_enrollment_application.Repository.Implementations\course_enrollment_application.Repository.Implementations.csproj" />
+    <ProjectReference Include="..\Client\course_enrollment_application.Client.csproj" />
+    <ProjectReference Include="..\Shared\course_enrollment_application.Shared.csproj" />
+  </ItemGroup>
+
+</Project>

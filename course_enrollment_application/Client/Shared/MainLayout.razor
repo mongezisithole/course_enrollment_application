@@ -1,0 +1,39 @@
+﻿@inherits LayoutComponentBase
+@using Blazored.LocalStorage
+@using course_enrollment_application.Shared.Security
+@inject HttpClient Http
+@inject AuthenticationStateProvider AuthStateProvider
+@inject ILocalStorageService LocalStorage
+@inject IConfiguration Configuration
+
+
+
+<div class="page">
+    <div class="sidebar">
+        <NavMenu />
+    </div>
+
+    <main>
+        <div class="top-row px-4">
+            <AuthorizeView>
+                <Authorized>
+                    <a class="btn btn-danger" @onclick=Logout>Logout</a>
+                </Authorized>
+            </AuthorizeView>
+        </div>
+
+        <article class="content px-4">
+            @Body
+        </article>
+    </main>
+</div>
+
+
+@code {
+    async Task Logout()
+    {
+        await LocalStorage.RemoveItemAsync("token");
+        await AuthStateProvider.GetAuthenticationStateAsync();
+
+    }
+}
