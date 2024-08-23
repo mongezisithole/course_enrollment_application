@@ -1,0 +1,24 @@
+﻿@page "/register"
+
+@inject HttpClient Http
+
+<h3>Register</h3>
+
+@* <div class="form-check">
+  <input class="form-check-input" type="radio" name="studentType" id="newStudent" checked=@IsNewStudent>
+  <label class="form-check-label" for="newStudent">
+    New student
+  </label>
+</div>
+<div class="form-check">
+  <input class="form-check-input" type="radio" name="studentType" id="existingStudent" checked=@(!IsNewStudent)>
+  <label class="form-check-label" for="existingStudent">
+    Existing student
+  </label>
+</div> *@
+
+
+
+@code {
+    private bool IsNewStudent {get; set;}
+}

@@ -1,10 +1,14 @@
-<Project Sdk="Microsoft.NET.Sdk.BlazorWebAssembly">
+﻿<Project Sdk="Microsoft.NET.Sdk.BlazorWebAssembly">
 
   <PropertyGroup>
     <TargetFramework>net7.0</TargetFramework>
     <Nullable>enable</Nullable>
     <ImplicitUsings>enable</ImplicitUsings>
   </PropertyGroup>
+
+  <ItemGroup>
+    <Content Remove="Pages\Register.razor" />
+  </ItemGroup>
 
   <ItemGroup>
     <PackageReference Include="Blazor.Bootstrap" Version="3.0.0-preview.3" />
@@ -18,6 +22,18 @@
 
   <ItemGroup>
     <ProjectReference Include="..\Shared\course_enrollment_application.Shared.csproj" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <UpToDateCheckInput Remove="Pages\Register.razor" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <_ContentIncludedByDefault Remove="Pages\Register.razor" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <None Include="Pages\Register.razor" />
   </ItemGroup>
 
 </Project>

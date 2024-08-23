@@ -19,6 +19,26 @@ namespace course_enrollment_application.Shared.Extensions.Entities
             studentCourse.LastModifiedDate = DateTime.Now;
         }
 
+        public static void Register(this StudentCourse studentCourse, Student student, Course course, AcademicYear currentAcademicYear)
+        {
+            if (studentCourse == null) throw new ArgumentNullException("Student course not found");
+
+            studentCourse.StudentId = student.Id;
+            studentCourse.CourseId = course.Id;
+            studentCourse.AcademicYearId = currentAcademicYear.Id;
+            studentCourse.RegistrationDate = DateTime.Now;
+            studentCourse.AcademicYearId = currentAcademicYear.Id;
+        }
+
+        public static void ReactivateCourse(this StudentCourse studentCourse, AcademicYear currentAcademicYear)
+        {
+            if (studentCourse == null) throw new ArgumentNullException("Student course not found");
+
+            studentCourse.IsActive = true;
+            studentCourse.DeregistrationDate = null;
+            studentCourse.AcademicYearId = currentAcademicYear.Id;
+            studentCourse.LastModifiedDate = DateTime.Now;
+        }
         public static StudentCourseSummary ConvertToSummary(this StudentCourse studentCourse)
         {
             if (studentCourse == null) throw new ArgumentNullException("Student course not found");

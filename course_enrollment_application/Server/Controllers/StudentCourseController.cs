@@ -33,5 +33,11 @@ namespace course_enrollment_application.Server.Controllers
         {
             return await _studentCourseRepo.StudentCourseDeregistration(deregistrationDetails.StudentId, deregistrationDetails.CourseId);
         }
+
+        [HttpPost("register")]
+        public async Task<bool> RegisterAsync([FromBody] StudentCourseRegistrationDetails details)
+        {
+            return await _studentCourseRepo.StudentCourseRegistration(details.StudentNumber, details.CourseId);
+        }
     }
 }

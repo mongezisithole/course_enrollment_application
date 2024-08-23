@@ -47,7 +47,7 @@ namespace course_enrollment_application.Repository.Implementations
         {
             try
             {
-                var studentCourse = _context.StudentCourses.FirstOrDefault(o => o.StudentId == studentId && o.CourseId == courseId);
+                var studentCourse = _context.StudentCourses.FirstOrDefault(o => o.StudentId == studentId && o.CourseId == courseId && o.IsActive);
 
                 if (studentCourse == null)
                     return false;
@@ -74,23 +74,27 @@ namespace course_enrollment_application.Repository.Implementations
             try
             {
                 var currentAcademicYear = _context.AcademicYears.FirstOrDefault(o => o.IsCurrentYear);
-                var student = _context.Students.FirstOrDefault(o => o.StudentNumber == studentNumber);
-                var course = _context.Courses.FirstOrDefault(o => o.Id == courseId);
+                var student = _context.Students.FirstOrDefault(o => o.StudentNumber == studentNumber && o.IsActive);
+                var course = _context.Courses.FirstOrDefault(o => o.Id == courseId && o.IsActive);
 
                 if (currentAcademicYear == null || student == null || course == null)
                 {
                     return false;
                 }
 
-                var studentCourse = new StudentCourse
-                {
-                    DeregistrationDate = DateTime.Now,
-                    StudentId = student.Id,
-                    CourseId = course.Id,
-                    AcademicYearId = currentAcademicYear.Id
-                };
+                var studentCourse = _context.StudentCourses.FirstOrDefault(o => o.CourseId == courseId && o.StudentId == student.Id);
 
-                await _context.StudentCourses.AddAsync(studentCourse);
+                if(studentCourse != null)
+                {
+                    studentCourse.ReactivateCourse(currentAcademicYear);
+                }
+                else
+                {
+                    studentCourse.Register(student, course, currentAcademicYear);
+
+                    await _context.StudentCourses.AddAsync(studentCourse);
+                }
+
                 await _context.SaveChangesAsync();
 
                 return true;
@@ -106,12 +110,12 @@ namespace course_enrollment_application.Repository.Implementations
         {
             try
             {
-                var student = _context.Students.FirstOrDefault(o => o.StudentNumber == studentNumber);
+                var student = _context.Students.FirstOrDefault(o => o.StudentNumber == studentNumber && o.IsActive);
 
                 if (student == null) throw new ArgumentNullException("Student details not found");
 
                 var currentAcademicYear = _context.AcademicYears.FirstOrDefault(o => o.IsCurrentYear);
-                var availableCourse = await _context.Courses.ToListAsync();
+                var availableCourse = await _context.Courses.Where(o => o.IsActive).ToListAsync();
 
                 if (currentAcademicYear == null)
                 {
@@ -119,7 +123,7 @@ namespace course_enrollment_application.Repository.Implementations
                 }
 
                 var studentCourses = await _context.StudentCourses.Where(o => o.StudentId == student.Id
-                    && o.AcademicYearId == currentAcademicYear.Id).Select(o => o.CourseId).ToListAsync();
+                    && o.AcademicYearId == currentAcademicYear.Id && o.IsActive).Select(o => o.CourseId).ToListAsync();
 
                 return availableCourse.Where(o => !studentCourses.Contains(o.Id)).ToList().ConvertToSummaries();
             }

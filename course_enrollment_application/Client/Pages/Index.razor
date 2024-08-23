@@ -59,7 +59,7 @@
                             <td>@course.RegistrationDate.ToString("dd-MMM-yyyy")</td>
                             <td>
                                 <a class="btn btn-primary">View</a>
-                                <a class="btn btn-danger" @onclick=@(async () => await ShowConfirmationAsync(course.Id))>Deregister</a>
+                                <a class="btn btn-danger" @onclick=@(async () => await DeregisterAsync(course.Id))>Deregister</a>
                             </td>
                         </tr>
                     }
@@ -76,7 +76,7 @@
 
                             <td>
                                 <a class="btn btn-primary">View</a>
-                                <a class="btn btn-success">Register</a>
+                                <a class="btn btn-success" @onclick=@(async () => await RegisterAsync(course.Id))>Register</a>
                             </td>
                         </tr>
                     }
@@ -185,7 +185,7 @@
 
 
 
-    private async Task ShowConfirmationAsync(int courseId)
+    private async Task DeregisterAsync(int courseId)
     {
         var confirmation = await dialog.ShowAsync(
             title: "Are you sure?",
@@ -210,9 +210,31 @@
                 await LoadMyCourses();
             }
         }
-        else
-        {
+    }
 
+    private async Task RegisterAsync(int courseId)
+    {
+        var confirmation = await dialog.ShowAsync(
+            title: "Are you sure?",
+            message1: "This will register your for the course.",
+            message2: "Do you want to proceed?");
+
+        if (confirmation)
+        {
+            var state = await AuthStateProvider.GetAuthenticationStateAsync();
+            var claim = state.User.Claims.FirstOrDefault(o => o.Type == ClaimTypes.NameIdentifier);
+
+            if (claim != null)
+            {
+                var details = new StudentCourseRegistrationDetails
+                    {
+                        CourseId = courseId,
+                        StudentNumber = claim.Value
+                    };
+
+                await Http.PostAsJsonAsync($"api/StudentCourse/register", details);
+                await LoadMyCourses();
+            }
         }
     }
 }
